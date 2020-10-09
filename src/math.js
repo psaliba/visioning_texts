@@ -1,23 +1,25 @@
 function split_b_k(data, b_ids, k_ids, b_name, k_name, address_id) {
     all_ids = b_ids.concat(k_ids);
     var full_data = data.filter(function(row) {
-        return all_ids.includes(row.TYPE) && row.ADDRESS == address_id;
+        return all_ids.includes(row.TYPE) && row.ADDRESS === address_id;
     }).map(function(row) {
         if (b_ids.includes(row.TYPE)) {
-            return {'name' : b_name,
-                    'date' : new Date(parseInt(row.DATE_SENT, 10)),
-                    'ID' : row.ID,
-                    'BODY' : row.BODY
-                   };
+            return {
+                name: b_name,
+                date: new Date(parseInt(row.DATE_SENT, 10)),
+                ID: row.ID,
+                BODY: row.BODY
+            }
         } else {  // in k_ids
-            return {'name' : k_name,
-                    'date' : new Date(parseInt(row.DATE_SENT, 10)),
-                    'ID' : row.ID,
-                    'BODY' : row.BODY
-                   };
+            return {
+                name: k_name,
+                date: new Date(parseInt(row.DATE_SENT, 10)),
+                ID: row.ID,
+                BODY: row.BODY
+            };
         }
     });
-    return {'names' : [b_name, k_name], 'data' : full_data};
+    return {names: [b_name, k_name], data: full_data};
 }
 
 function split_b_k_facebook(text) {
@@ -27,15 +29,15 @@ function split_b_k_facebook(text) {
         return msg.type == "Generic" && msg.content;
     }).map( (msg) => {
         return {
-            'name': msg.sender_name,
-            'date': new Date(msg.timestamp_ms),
-            'ID': `${msg.sender_name}_${msg.timestamp_ms}`,
-            'BODY': decodeURIComponent(escape(msg.content))
+            name: msg.sender_name,
+            date: new Date(msg.timestamp_ms),
+            ID: `${msg.sender_name}_${msg.timestamp_ms}`,
+            BODY: decodeURIComponent(escape(msg.content))
         };
     });
     return {
-        'names': names,
-        'data': data
+        names: names,
+        data: data
     };
 }
 
@@ -137,14 +139,14 @@ function split_b_k_whatsapp(text) {
         }
 
         // ambiguity: still empty
-        return {'best_guess' : use_braces + 'M' + date_split + 'D' + date_split + year_str
-                + ', H:mm' + seconds_str + use_meridan};
+        return { 'best_guess' : use_braces + 'M' + date_split + 'D' + date_split + year_str
+                + ', H:mm' + seconds_str + use_meridan };
     }, {});
 
     if (!used['regex']) {
         console.log("The input file has an ambigious date format, i.e. couldn't tell if MM/DD or DD/MM. Using MM/DD");
         console.log("Example line: " + lines[0]);
-        used['regex'] = date_regexx;
+        used.regex = date_regexx;
         used = {'regex' : date_regexx, 'delim' : delim_str, 'formats' : [used.best_guess]};
     }
 
@@ -170,12 +172,12 @@ function split_b_k_whatsapp(text) {
         let colon_idx = rest_str.indexOf(':');
         if (colon_idx == -1) {
             // Found a weird whatsapp notification. Delete
-            return {'name' : 'DELETE_ME'};
+            return {name: 'DELETE_ME'};
         }
         let name_str = rest_str.slice(0, colon_idx);
         let msg_str = rest_str.slice(colon_idx + 1);
-        return {'name' : name_str.trim().split(' ')[0], 'BODY' : msg_str.trim(),
-                'date' : moment(time_str.trim(), used.formats).toDate()};
+        return {name: name_str.trim().split(' ')[0], 'BODY' : msg_str.trim(),
+                date: moment(time_str.trim(), used.formats).toDate()};
     });
     let full_filtered_data = full_data.filter(function(d) {
         return d.name != 'DELETE_ME';
